@@ -16,7 +16,13 @@ export CONJUR_HOST=${CONJUR_LOCATION%%/*}
 echo "buildpack=conjur at=setup host=$CONJUR_HOST path=$CONJUR_RESOURCE_PATH"
 
 # Get the certificate
-echo | openssl s_client -showcerts -connect sandbox.conjur.um.pl.eu.org:443 2> /dev/null | openssl x509 > /tmp/conjur.pem
+
+getlastcert() {
+  # Extract the last certificate in a chain (which is presumably the root)
+  ruby -e 'puts ARGF.read.scan(/-----BEGIN CERTIFICATE-----[^-]+-----END CERTIFICATE-----/m).last'
+}
+
+echo | openssl s_client -showcerts -connect $CONJUR_HOST:443 2> /dev/null | getlastcert > /tmp/conjur.pem
 export CONJUR_CERT_ACTUAL_FINGERPRINT=`openssl x509 -fingerprint -noout -in /tmp/conjur.pem | sed -e s/.*=//`
 echo "buildpack=conjur at=ssl fingerprint=$CONJUR_CERT_ACTUAL_FINGERPRINT"
 
