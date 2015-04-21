@@ -153,6 +153,7 @@ Visit App
 ```
 $ conjur proxy https://`heroku domains | tail -n+2` &
 $ xdg-open http://localhost:8080
+$ heroku open # => will 403 -- no Conjur authorization header
 ```
 
 ## License
