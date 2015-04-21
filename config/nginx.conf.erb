@@ -41,5 +41,26 @@ http {
 			proxy_redirect off;
 			proxy_pass http://app_server;
 		}
+
+		location = /conjur-authn {
+      internal;
+      set $conjur_privilege update;
+      if ($request_method = 'GET') {
+        set $conjur_privilege read;
+      }
+      proxy_method GET;
+      proxy_ssl_verify on;
+      proxy_ssl_trusted_certificate /tmp/conjur.pem;
+      proxy_pass https://conjur/<%= ENV['CONJUR_RESOURCE_PATH'] %>/?check=true&privilege=$conjur_privilege;
+      proxy_intercept_errors on;
+      proxy_next_upstream error timeout http_403;
+      proxy_pass_request_body off;
+      proxy_set_header Content-Length "";
+      proxy_set_header X-Original-URI $request_uri;
+    }
 	}
+
+  upstream conjur {
+    server <%= ENV['CONJUR_HOST'] %>:443;
+  }
 }
