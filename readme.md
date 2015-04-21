@@ -1,49 +1,43 @@
-# Heroku Buildpack: NGINX
+# Heroku Buildpack: Conjur
 
-Nginx-buildpack vendors NGINX inside a dyno and connects NGINX to an app server via UNIX domain sockets.
+Conjur-buildpack provides a Conjur access-controlled gateway to a Heroku app.
 
-## Motivation
-
-Some application servers (e.g. Ruby's Unicorn) halt progress when dealing with network I/O. Heroku's Cedar routing stack [buffers only the headers](https://devcenter.heroku.com/articles/http-routing#request-buffering) of inbound requests. (The Cedar router will buffer the headers and body of a response up to 1MB) Thus, the Heroku router engages the dyno during the entire body transfer –from the client to dyno. For applications servers with blocking I/O, the latency per request will be degraded by the content transfer. By using NGINX in front of the application server, we can eliminate a great deal of transfer time from the application server. In addition to making request body transfers more efficient, all other I/O should be improved since the application server need only communicate with a UNIX socket on localhost. Basically, for webservers that are not designed for efficient, non-blocking I/O, we will benefit from having NGINX to handle all I/O operations.
+To that end, it bases on https://github.com/ryandotsmith/nginx-buildpack to
+vendor a nginx reverse proxy which checks permissions before allowing requests
+to go through.
 
 ## Versions
 
-* Buildpack Version: 0.4
-* NGINX Version: 1.5.7
+* Buildpack version: 0.0.1
+* Base NGINX buildpack Version: 0.4
+* NGINX Version: 1.7.12
 
 ## Requirements
 
 * Your webserver listens to the socket at `/tmp/nginx.socket`.
 * You touch `/tmp/app-initialized` when you are ready for traffic.
 * You can start your web server with a shell command.
+* You have a Conjur resource representing this service.
 
 ## Features
 
-* Unified NXNG/App Server logs.
-* [L2met](https://github.com/ryandotsmith/l2met) friendly NGINX log format.
-* [Heroku request ids](https://devcenter.heroku.com/articles/http-request-id) embedded in NGINX logs.
-* Crashes dyno if NGINX or App server crashes. Safety first.
-* Language/App Server agnostic.
-* Customizable NGINX config.
-* Application coordinated dyno starts.
+* Uses Authorization header on incoming request to check permission with Conjur.
+* Distinguishes between GET and other requests.
 
-### Logging
+### Delegate authorization
 
-NGINX will output the following style of logs:
+The reverse proxy passes the Authorization header of the incoming request to
+Conjur authz to perform privilege check on the resource associated with this
+service. It denies the request if the check is negative.
 
-```
-measure.nginx.service=0.007 request_id=e2c79e86b3260b9c703756ec93f8a66d
-```
+### HTTP method mapping
 
-You can correlate this id with your Heroku router logs:
-
-```
-at=info method=GET path=/ host=salty-earth-7125.herokuapp.com request_id=e2c79e86b3260b9c703756ec93f8a66d fwd="67.180.77.184" dyno=web.1 connect=1ms service=8ms status=200 bytes=21
-```
+For GET requests to succeed the client must have *read* privilege; for all the
+other HTTP methods *update* privilege is checked.
 
 ### Language/App Server Agnostic
 
-Nginx-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
+Conjur-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
 
 For example, to get NGINX and Unicorn up and running:
 
@@ -51,25 +45,6 @@ For example, to get NGINX and Unicorn up and running:
 $ cat Procfile
 web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
 ```
-
-### Setting the Worker Processes
-
-You can configure NGINX's `worker_processes` directive via the
-`NGINX_WORKERS` environment variable.
-
-For example, to set your `NGINX_WORKERS` to 8 on a PX dyno:
-
-```bash
-$ heroku config:set NGINX_WORKERS=8
-```
-
-### Customizable NGINX Config
-
-You can provide your own NGINX config by creating a file named `nginx.conf.erb` in the config directory of your app. Start by copying the buildpack's [default config file](https://github.com/ryandotsmith/nginx-buildpack/blob/master/config/nginx.conf.erb).
-
-### Customizable NGINX Compile Options
-
-See [scripts/build_nginx.sh](scripts/build_nginx.sh) for the build steps. Configuring is as easy as changing the "./configure" options.
 
 ### Application/Dyno coordination
 
@@ -83,8 +58,8 @@ Here are 2 setup examples. One example for a new app, another for an existing ap
 
 Update Buildpacks
 ```bash
-$ heroku config:set BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
-$ echo 'https://github.com/ryandotsmith/nginx-buildpack.git' >> .buildpacks
+$ heroku buildpack:set https://github.com/ddollar/heroku-buildpack-multi.git
+$ echo 'https://github.com/conjurinc/conjur-buildpack.git' >> .buildpacks
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
 $ git add .buildpacks
 $ git commit -m 'Add multi-buildpack'
@@ -95,7 +70,7 @@ web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
 ```
 ```bash
 $ git add Procfile
-$ git commit -m 'Update procfile for NGINX buildpack'
+$ git commit -m 'Update procfile for Conjur buildpack'
 ```
 Update Unicorn Config
 ```ruby
@@ -109,6 +84,13 @@ end
 $ git add config/unicorn.rb
 $ git commit -m 'Update unicorn config to listen on NGINX socket.'
 ```
+
+Create a Conjur resource
+```sh-session
+$ conjur resource create service:unicorn
+$ heroku config:set CONJUR_RESOURCE_URL=https://conjur.example.com/api/authz/account/resources/service/unicorn
+```
+
 Deploy Changes
 ```bash
 $ git push heroku master
@@ -152,11 +134,16 @@ Create Procfile
 ```
 web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
 ```
+Create a Conjur resource
+```sh-session
+$ conjur resource create service:unicorn
+```
 Create & Push Heroku App:
 ```bash
 $ heroku create --buildpack https://github.com/ddollar/heroku-buildpack-multi.git
+$ heroku config:set CONJUR_RESOURCE_URL=https://conjur.example.com/api/authz/account/resources/service/unicorn
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
-$ echo 'https://github.com/ryandotsmith/nginx-buildpack.git' >> .buildpacks
+$ echo 'https://github.com/conjurinc/conjur-buildpack.git' >> .buildpacks
 $ git add .
 $ git commit -am "init"
 $ git push heroku master
@@ -164,10 +151,17 @@ $ heroku logs -t
 ```
 Visit App
 ```
-$ heroku open
+$ conjur proxy https://`heroku domains | tail -n+2` &
+$ xdg-open http://localhost:8080
 ```
 
 ## License
+Copyright (c) 2015 Rafal Rzepecki
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### Original NGINX buildpack license
 Copyright (c) 2013 Ryan R. Smith
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
