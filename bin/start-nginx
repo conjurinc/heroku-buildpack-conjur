@@ -35,7 +35,7 @@ if ! [ -z "$CONJUR_CERT_FINGERPRINT" ]; then
 fi
 
 #Evaluate config to get $PORT
-erb -rsecurerandom config/nginx.conf.erb > config/nginx.conf
+erb -r securerandom config/nginx.conf.erb > config/nginx.conf
 
 n=1
 while getopts :f option ${@:1:2}
