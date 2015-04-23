@@ -8,7 +8,7 @@ to go through.
 
 ## Versions
 
-* Buildpack version: 0.0.1
+* Buildpack version: 0.1.0
 * Base NGINX buildpack Version: 0.4
 * NGINX Version: 1.7.12
 
@@ -23,6 +23,8 @@ to go through.
 
 * Uses Authorization header on incoming request to check permission with Conjur.
 * Distinguishes between GET and other requests.
+* SSL certificate verification.
+* Authorization result caching.
 
 ### Delegate authorization
 
@@ -34,6 +36,22 @@ service. It denies the request if the check is negative.
 
 For GET requests to succeed the client must have *read* privilege; for all the
 other HTTP methods *update* privilege is checked.
+
+### SSL certificate verification
+
+By default a leap-of-faith SSL verification is performed -- on starting up, the
+Conjur server is contacted and its root certificate is stored in a file, which
+is then used for subsequent verification. If you want to make it safer, you
+can set `CONJUR_CERT_FINGERPRINT` Heroku variable to the expected root
+certificate fingerprint (in format `92:25:4F:70:...`, as output by
+`openssl x509 -fingerprint`); the server won't start if it doesn't match.
+
+### Authorization result caching
+
+Successful authorizations are automatically cached on per-token basis. This
+means this gateway is suitable even for interactive applications with plenty of
+resources (and therefore, requests), as only a single authorization request
+will be performed for the entire lifetime of a token.
 
 ### Language/App Server Agnostic
 
@@ -98,7 +116,7 @@ $ git push heroku master
 
 ### New App
 
-```bash
+```sh-session
 $ mkdir myapp; cd myapp
 $ git init
 ```
@@ -127,7 +145,7 @@ before_fork do |server,worker|
 end
 ```
 Install Gems
-```bash
+```sh-session
 $ bundle install
 ```
 Create Procfile
@@ -139,7 +157,7 @@ Create a Conjur resource
 $ conjur resource create service:unicorn
 ```
 Create & Push Heroku App:
-```bash
+```sh-session
 $ heroku create --buildpack https://github.com/ddollar/heroku-buildpack-multi.git
 $ heroku config:set CONJUR_RESOURCE_URL=https://conjur.example.com/api/authz/account/resources/service/unicorn
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
@@ -150,7 +168,7 @@ $ git push heroku master
 $ heroku logs -t
 ```
 Visit App
-```
+```sh-session
 $ conjur proxy https://`heroku domains | tail -n+2` &
 $ xdg-open http://localhost:8080
 $ heroku open # => will 401 -- no Conjur authorization header
