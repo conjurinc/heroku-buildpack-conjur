@@ -30,6 +30,7 @@ http {
 		server unix:/tmp/nginx.socket fail_timeout=0;
  	}
 
+ 	# create a cache zone for conjur-auth; 1M for keys should be plenty
   proxy_cache_path /tmp/conjur-auth keys_zone=conjur-auth:1M inactive=480;
 
 	server {
@@ -66,9 +67,16 @@ http {
       # a randomly pregenerated key, effectively peppering the hash.
       set_hmac_sha1 $conjur_auth_key <%= SecureRandom.hex %> $http_authorization;
       proxy_cache_key $conjur_auth_key;
-      proxy_cache conjur-auth;
+
+      proxy_cache conjur-auth; # the cache zone
+
+      # hold other (duplicate) requests while one is running
       proxy_cache_lock on;
+
+      # cache permits for 8 minutes
       proxy_cache_valid 204 8m;
+
+      # ignore the cache-control header (otherwise it wouldn't be cacheable)
       proxy_ignore_headers Cache-Control;
     }
 	}
