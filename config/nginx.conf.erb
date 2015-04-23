@@ -30,6 +30,8 @@ http {
 		server unix:/tmp/nginx.socket fail_timeout=0;
  	}
 
+  proxy_cache_path /tmp/conjur-auth keys_zone=conjur-auth:1M inactive=480;
+
 	server {
 		listen <%= ENV["PORT"] %>;
 		server_name _;
@@ -58,6 +60,16 @@ http {
       proxy_pass_request_body off;
       proxy_set_header Content-Length "";
       proxy_set_header X-Original-URI $request_uri;
+
+      # To avoid storing the authentication tokens plaintext in cache, use
+      # a hash. To avoid any potential hash collision attacks, do a hmac with
+      # a randomly pregenerated key, effectively peppering the hash.
+      set_hmac_sha1 $conjur_auth_key <%= SecureRandom.hex %> $http_authorization;
+      proxy_cache_key $conjur_auth_key;
+      proxy_cache conjur-auth;
+      proxy_cache_lock on;
+      proxy_cache_valid 204 8m;
+      proxy_ignore_headers Cache-Control;
     }
 	}
 
