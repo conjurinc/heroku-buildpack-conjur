@@ -78,7 +78,7 @@ Here are 2 setup examples. One example for a new app, another for an existing ap
 Update Buildpacks
 ```bash
 $ heroku buildpack:set https://github.com/ddollar/heroku-buildpack-multi.git
-$ echo 'https://github.com/conjurinc/conjur-buildpack.git' >> .buildpacks
+$ echo 'https://github.com/conjurinc/heroku-buildpack-conjur.git' >> .buildpacks
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
 $ git add .buildpacks
 $ git commit -m 'Add multi-buildpack'
@@ -162,7 +162,7 @@ Create & Push Heroku App:
 $ heroku create --buildpack https://github.com/ddollar/heroku-buildpack-multi.git
 $ heroku config:set CONJUR_RESOURCE_URL=https://conjur.example.com/api/authz/account/resources/service/unicorn
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
-$ echo 'https://github.com/conjurinc/conjur-buildpack.git' >> .buildpacks
+$ echo 'https://github.com/conjurinc/heroku-buildpack-conjur.git' >> .buildpacks
 $ git add .
 $ git commit -am "init"
 $ git push heroku master
