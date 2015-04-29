@@ -1,3 +1,7 @@
+## v0.2.0
+
+* separate privileges for OPTIONS, HEAD, and POST
+
 ## v0.1.1
 
 * cache authorizations separately for each privilege
