@@ -49,8 +49,17 @@ http {
 		location = /conjur-authn {
       internal;
       set $conjur_privilege update;
-      if ($request_method = 'GET') {
+      if ($request_method = 'GET' ) {
         set $conjur_privilege read;
+      }
+      if ($request_method = 'OPTIONS' ) {
+        set $conjur_privilege read;
+      }
+      if ($request_method = 'HEAD' ) {
+        set $conjur_privilege read;
+      }
+      if ($request_method = 'POST' ) {
+        set $conjur_privilege create;
       }
       proxy_method GET;
       proxy_ssl_verify on;
