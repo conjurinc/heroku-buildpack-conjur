@@ -48,19 +48,6 @@ http {
 
 		location = /conjur-authn {
       internal;
-      set $conjur_privilege update;
-      if ($request_method = 'GET' ) {
-        set $conjur_privilege read;
-      }
-      if ($request_method = 'OPTIONS' ) {
-        set $conjur_privilege read;
-      }
-      if ($request_method = 'HEAD' ) {
-        set $conjur_privilege read;
-      }
-      if ($request_method = 'POST' ) {
-        set $conjur_privilege create;
-      }
       proxy_method GET;
       proxy_ssl_verify on;
       proxy_ssl_trusted_certificate /tmp/conjur.pem;
@@ -89,6 +76,14 @@ http {
       proxy_ignore_headers Cache-Control;
     }
 	}
+
+	map $request_method $conjur_privilege {
+    default update;
+    GET read;
+    OPTIONS read;
+    HEAD read;
+    POST create;
+  }
 
   upstream conjur {
     server <%= ENV['CONJUR_HOST'] %>:443;
