@@ -8,7 +8,7 @@ to go through.
 
 ## Versions
 
-* Buildpack version: 0.1.1
+* Buildpack version: 0.2.0
 * Base NGINX buildpack Version: 0.4
 * NGINX Version: 1.7.12
 
@@ -22,7 +22,7 @@ to go through.
 ## Features
 
 * Uses Authorization header on incoming request to check permission with Conjur.
-* Distinguishes between GET and other requests.
+* Distinguishes between GET and other requests (e.g. OPTIONS, HEAD, and POST).
 * SSL certificate verification.
 * Authorization result caching.
 
@@ -34,8 +34,12 @@ service. It denies the request if the check is negative.
 
 ### HTTP method mapping
 
-For GET requests to succeed the client must have *read* privilege; for all the
-other HTTP methods *update* privilege is checked.
+The HTTP method of the request determines the required Conjur privilege:
+
+* `GET`, `HEAD`, `OPTIONS` requires "read"
+* `POST` requires "create"
+* All other methods require "update"
+
 
 ### SSL certificate verification
 
@@ -176,7 +180,7 @@ $ heroku open # => will 401 -- no Conjur authorization header
 ```
 
 ## License
-Copyright (c) 2015 Rafal Rzepecki
+Copyright (c) 2015 Conjur Inc
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
