@@ -1,9 +1,0 @@
-{
-  "id": "dokku-test-02.itd.conjur.net",
-  "userid": "kgilpin",
-  "created_at": "2015-04-29T14:49:36Z",
-  "ownerid": "conjurops:user:kgilpin",
-  "roleid": "conjurops:host:dokku-test-02.itd.conjur.net",
-  "resource_identifier": "conjurops:host:dokku-test-02.itd.conjur.net",
-  "api_key": "2jw3p12328s2fzbf5jr21jgqskr1amzgx8mtpgtn2ny2xq7x53k55"
-}
