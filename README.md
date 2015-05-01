@@ -1,16 +1,6 @@
 # Heroku Buildpack: Conjur
 
-Conjur-buildpack provides a Conjur access-controlled gateway to a Heroku app.
-
-To that end, it bases on https://github.com/ryandotsmith/nginx-buildpack to
-vendor a nginx reverse proxy which checks permissions before allowing requests
-to go through.
-
-## Versions
-
-* Buildpack version: 0.2.0
-* Base NGINX buildpack Version: 0.4
-* NGINX Version: 1.7.12
+Conjur-buildpack provides a Conjur access-controlled gatekeeper to a Heroku app. It installs a reverse proxy in your Heroku dyno which efficiently checks permissions before allowing requests to go through.
 
 ## Requirements
 
@@ -28,7 +18,7 @@ to go through.
 
 ### Delegate authorization
 
-The reverse proxy passes the Authorization header of the incoming request to
+The gatekeeper passes the Authorization header of the incoming request to
 Conjur authz to perform privilege check on the resource associated with this
 service. It denies the request if the check is negative.
 
@@ -40,11 +30,10 @@ The HTTP method of the request determines the required Conjur privilege:
 * `POST` requires "create"
 * All other methods require "update"
 
-
 ### SSL certificate verification
 
 By default a leap-of-faith SSL verification is performed -- on starting up, the
-Conjur server is contacted and its root certificate is stored in a file, which
+gatekeeper contacts the Conjur server stores its root certificate in a file, which
 is then used for subsequent verification. If you want to make it safer, you
 can set `CONJUR_CERT_FINGERPRINT` Heroku variable to the expected root
 certificate fingerprint (in format `92:25:4F:70:...`, as output by
@@ -54,9 +43,8 @@ certificate fingerprint (in format `92:25:4F:70:...`, as output by
 
 Successful authorizations are automatically cached on per-token (and
 per-privilege) basis. This means this gateway is suitable even for interactive
-applications with plenty of resources (and therefore, requests), as only a
-single authorization request will be performed for the entire lifetime
-of a token.
+applications which make frequent requests, as only a single authorization request 
+will be performed for the entire lifetime of a token.
 
 ### Language/App Server Agnostic
 
@@ -71,7 +59,7 @@ web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
 
 ### Application/Dyno coordination
 
-The buildpack will not start NGINX until a file has been written to `/tmp/app-initialized`. Since NGINX binds to the dyno's $PORT and since the $PORT determines if the app can receive traffic, you can delay NGINX accepting traffic until your application is ready to handle it. The examples below show how/when you should write the file when working with Unicorn.
+The buildpack will not start the gatekeeper until a file has been written to `/tmp/app-initialized`. Since the gatekeeper binds to the dyno's $PORT and since the $PORT determines if the app can receive traffic, you can delay the gatekeeper accepting traffic until your application is ready to handle it. The examples below show how/when you should write the file when working with Unicorn.
 
 ## Setup
 
@@ -178,6 +166,12 @@ $ conjur proxy https://`heroku domains | tail -n+2` &
 $ xdg-open http://localhost:8080
 $ heroku open # => will 401 -- no Conjur authorization header
 ```
+
+## Versions
+
+* Buildpack version: 0.2.0
+* Base NGINX buildpack Version: 0.4
+* NGINX Version: 1.7.12
 
 ## License
 Copyright (c) 2015 Conjur Inc
