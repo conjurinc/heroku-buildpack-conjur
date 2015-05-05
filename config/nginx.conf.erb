@@ -72,6 +72,9 @@ http {
       # cache permits for 8 minutes
       proxy_cache_valid 204 8m;
 
+      # cache other responses for 8 seconds
+      proxy_cache_valid any 8s;
+
       # ignore the cache-control header (otherwise it wouldn't be cacheable)
       proxy_ignore_headers Cache-Control;
     }

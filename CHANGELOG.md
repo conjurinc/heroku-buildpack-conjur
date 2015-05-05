@@ -1,3 +1,5 @@
+* cache denials (and other non-permit responses) for 8s
+
 ## v0.2.0
 
 * separate privileges for OPTIONS, HEAD, and POST
