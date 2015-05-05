@@ -169,7 +169,7 @@ $ heroku open # => will 401 -- no Conjur authorization header
 
 ## Versions
 
-* Buildpack version: 0.2.0
+* Buildpack version: 0.3.0
 * Base NGINX buildpack Version: 0.4
 * NGINX Version: 1.7.12
 

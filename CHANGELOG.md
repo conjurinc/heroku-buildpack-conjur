@@ -1,3 +1,5 @@
+## v0.3.0
+
 * cache denials (and other non-permit responses) for 8s
 
 ## v0.2.0
