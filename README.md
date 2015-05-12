@@ -1,6 +1,6 @@
 # Heroku Buildpack: Conjur
 
-Conjur-buildpack provides a Conjur access-controlled gatekeeper to a Heroku app. It installs a reverse proxy in your Heroku dyno which efficiently checks permissions before allowing requests to go through.
+This buildpack provides a Conjur access-controlled gatekeeper to a Heroku app. It installs a reverse proxy in your Heroku dyno which efficiently checks permissions before allowing requests to go through.
 
 ## Requirements
 
@@ -69,7 +69,7 @@ Here are 2 setup examples. One example for a new app, another for an existing ap
 
 Update Buildpacks
 ```bash
-$ heroku buildpack:set https://github.com/ddollar/heroku-buildpack-multi.git
+$ heroku buildpack:set https://github.com/heroku/heroku-buildpack-multi.git
 $ echo 'https://github.com/conjurinc/heroku-buildpack-conjur.git' >> .buildpacks
 $ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
 $ git add .buildpacks
