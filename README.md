@@ -67,13 +67,11 @@ Here are 2 setup examples. One example for a new app, another for an existing ap
 
 ### Existing App
 
-Update Buildpacks
-```bash
-$ heroku buildpack:set https://github.com/heroku/heroku-buildpack-multi.git
-$ echo 'https://github.com/conjurinc/heroku-buildpack-conjur.git' >> .buildpacks
-$ echo 'https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz' >> .buildpacks
-$ git add .buildpacks
-$ git commit -m 'Add multi-buildpack'
+Update Buildpacks (see https://devcenter.heroku.com/changelog-items/653 for details on multi-buildpack management):
+
+```sh-session
+$ heroku buildpacks:set https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/ruby.tgz
+$ heroku buildpacks:add --index 1 https://github.com/conjurinc/heroku-buildpack-conjur.git
 ```
 Update Procfile:
 ```
