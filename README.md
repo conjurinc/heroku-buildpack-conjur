@@ -43,7 +43,7 @@ certificate fingerprint (in format `92:25:4F:70:...`, as output by
 
 Successful authorizations are automatically cached on per-token (and
 per-privilege) basis. This means this gateway is suitable even for interactive
-applications which make frequent requests, as only a single authorization request 
+applications which make frequent requests, as only a single authorization request
 will be performed for the entire lifetime of a token.
 
 ### Language/App Server Agnostic
@@ -167,7 +167,7 @@ $ heroku open # => will 401 -- no Conjur authorization header
 
 ## Versions
 
-* Buildpack version: 0.3.0
+* Buildpack version: 0.3.1
 * Base NGINX buildpack Version: 0.4
 * NGINX Version: 1.7.12
 
