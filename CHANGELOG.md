@@ -1,3 +1,7 @@
+## v0.3.2
+
+* Update nginx buildpack to support Heroku v3, cedar-16
+
 ## v0.3.0
 
 * cache denials (and other non-permit responses) for 8s
